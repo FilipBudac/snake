@@ -1,122 +1,10 @@
-import random
-from abc import abstractmethod
-from tkinter import Canvas, Frame, ALL
+from tkinter import Canvas, ALL
 from tkinter.tix import Tk
 from typing import List, Final, Any
-from PIL import Image, ImageTk
-from enum import Enum
-
-
-class AssetsEnum(Enum):
-    SNAKE = 0
-    FOOD = 1
-    BOARD = 2
-
-
-class Asset:
-
-    def __init__(self):
-        self.image = None
-
-    @abstractmethod
-    def load_image(self):
-        pass
-
-    @abstractmethod
-    def draw(self, game):
-        pass
-
-    @abstractmethod
-    def update(self, game):
-        pass
-
-
-class Food(Asset):
-
-    FOOD_PATH: Final = './food.png'
-    FOOD_TAG: Final = 'food_tag'
-
-    def __init__(self):
-        super().__init__()
-        self.position = (50, 500)
-        self.gen_interval = 8000
-
-    def load_image(self):
-        self.image = ImageTk.PhotoImage(Image.open(self.FOOD_PATH))
-
-    def draw(self, game):
-        game.create_image(*self.position, image=self.image, tag=self.FOOD_TAG)
-
-    def generate_food(self, game, width, height):
-        x = random.randrange(20, width - 20, 20)
-        y = random.randrange(20, height - 20, 20)
-        self.position = (x, y)
-
-        self.update(game)
-
-    def check_collision(self, x, y) -> bool:
-        collided = False
-
-        if (self.position[0] - 20 < x < self.position[0] + 20) and (self.position[1] - 20 < y < self.position[1] + 20):
-            collided = True
-
-        return collided
-
-    def update(self, game):
-        game.coords(game.find_withtag(self.FOOD_TAG), *self.position)
-
-
-class Board(Asset):
-
-    SCORE_TAG: Final = 'score_tag'
-
-    def __init__(self):
-        super().__init__()
-        self.score = 0
-
-    def load_image(self):
-        pass
-
-    def draw(self, game):
-        game.create_text(50, 20, text=f"Score: {self.score}", tag=self.SCORE_TAG, fill="#ffffff", font=('Lucida Sans Unicode', 16))
-
-    def update(self, game):
-        self.score += 1
-        game.itemconfigure(game.find_withtag(self.SCORE_TAG), text=f"Score: {self.score}", tag=self.SCORE_TAG)
-
-
-class Snake(Asset):
-
-    SNAKE_PATH: Final = './snake.png'
-    SNAKE_TAG: Final = 'snake_tag'
-
-    def __init__(self):
-        super().__init__()
-        self.positions = [(100, 100), (80, 100), (60, 100)]
-        self.movement_step = 20
-        self.speed = 100
-        self.direction = 39
-
-    def load_image(self):
-        self.image = ImageTk.PhotoImage(Image.open(self.SNAKE_PATH))
-
-    def draw(self, game):
-        for x, y in self.positions:
-            game.create_image(x, y, image=self.image, tag=self.SNAKE_TAG)
-
-    def increase_speed(self):
-        self.speed -= 2
-
-    def grow(self, game):
-        new_position = self.positions[-1]
-        self.positions.append(new_position)
-        game.create_image(*new_position, image=self.image, tag=self.SNAKE_TAG)
-
-    def update(self, game):
-        snake_parts = game.find_withtag(self.SNAKE_TAG)
-
-        for snake_part, position in zip(snake_parts, self.positions):
-            game.coords(snake_part, position)
+from src.assets.asset import AssetsEnum
+from src.assets.board import Board
+from src.assets.food import Food
+from src.assets.snake import Snake
 
 
 class SnakeGame(Canvas):
@@ -234,13 +122,13 @@ if __name__ == '__main__':
     snake = Snake()
     board = Board()
     food = Food()
+    assets = [snake, food, board]
 
     root = Tk()
     root.title("Snake Game")
     root.resizable(False, False)
-    content = Frame(root)
 
-    assets = [snake, food, board]
-    game = SnakeGame(assets)
+    SnakeGame(assets)
 
     root.mainloop()
+
